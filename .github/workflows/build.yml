@@ -1,0 +1,39 @@
+name: Build App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            sep: ";"
+          - os: macos-13
+            sep: ":"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller customtkinter tkintermapview pillow requests
+
+      - name: Build
+        run: >
+          pyinstaller --windowed --collect-data customtkinter
+          --add-data "plane.png${{ matrix.sep }}."
+          --add-data "plane_color_blue.png${{ matrix.sep }}."
+          main.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: adsb-radar-${{ matrix.os }}
+          path: dist/*
